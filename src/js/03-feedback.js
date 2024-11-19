@@ -1,35 +1,49 @@
+import throttle from 'lodash.throttle';
+
 const form = document.querySelector('.feedback-form');
-
 const formData_key = 'feedback-form-state';
-
-const formData = JSON.parse(localStorage.getItem(formData_key)) || {};
+let formData = JSON.parse(localStorage.getItem(formData_key)) || {};
 
 populateFormFields();
 
-form.addEventListener('input', onFormInput);
+form.addEventListener('input', throttle(onFormInput, 500));
 form.addEventListener('submit', onFormSubmit);
 
 function onFormInput(e) {
-  const emailName = 'email';
-  const messageName = 'message';
-  if (e.target.name === emailName) {
-    formData[emailName] = e.target.value;
-    localStorage.setItem(formData_key, JSON.stringify(formData));
-  } else if (e.target.name === messageName) {
-    formData[messageName] = e.target.value;
+  const { name, value } = e.target;
+
+  if (name) {
+    formData[name] = value.trim();
     localStorage.setItem(formData_key, JSON.stringify(formData));
   }
 }
 
 function onFormSubmit(e) {
   e.preventDefault();
+
+  if (!formData.email || !formData.message) {
+    alert('Пожалуйста, заполните все поля формы.');
+    return;
+  }
+
+  console.log('formdata:', formData);
+
   e.currentTarget.reset();
   localStorage.removeItem(formData_key);
+
+  // Очистка объекта
+  // Object.keys(formData).forEach(key => delete formData[key]);
+  formData = {};
 }
 
 function populateFormFields() {
-  if (formData) {
-    form.elements.email.value = formData.email;
-    form.elements.message.value = formData.message;
-  }
+  const entries = Object.entries(formData);
+
+  entries.forEach(([key, value]) => {
+    const input = form.elements[key];
+
+    if (input) {
+      input.value = value;
+    }
+  });
 }
