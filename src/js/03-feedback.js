@@ -2,13 +2,26 @@ import throttle from 'lodash.throttle';
 
 const form = document.querySelector('.feedback-form');
 const formData_key = 'feedback-form-state';
-let formData = JSON.parse(localStorage.getItem(formData_key)) || {};
 
+// Восстановление данных из localStorage с обработкой ошибок
+// let formData = JSON.parse(localStorage.getItem(formData_key)) || {};
+let formData;
+
+try {
+  const data = localStorage.getItem(formData_key);
+  formData = data ? JSON.parse(data) : {};
+} catch (error) {
+  console.error('Ошибка при разборе данных из localStorage:', error);
+  formData = {};
+}
+
+// Восстанавливаем значения в полях формы
 populateFormFields();
 
 form.addEventListener('input', throttle(onFormInput, 500));
 form.addEventListener('submit', onFormSubmit);
 
+// Функция: обработка ввода данных и сохранение в localStorage
 function onFormInput(e) {
   const { name, value } = e.target;
 
@@ -18,6 +31,7 @@ function onFormInput(e) {
   }
 }
 
+// Функция: обработка отправки формы
 function onFormSubmit(e) {
   e.preventDefault();
 
@@ -36,7 +50,12 @@ function onFormSubmit(e) {
   formData = {};
 }
 
+// Функция: заполнение полей формы из formData
 function populateFormFields() {
+  if (!formData || typeof formData !== 'object') {
+    return;
+  }
+
   const entries = Object.entries(formData);
 
   entries.forEach(([key, value]) => {
